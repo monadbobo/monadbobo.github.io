@@ -8,7 +8,7 @@ permalink: /2011/06/01/nginx-fastcgi%e6%a8%a1%e5%9d%97%e7%9a%84%e4%b8%80%e4%b8%a
 categories:
   - nginx
   - server
-translate_title: bug-of-nginx-fastcgi-module
+translate_title: a-bug-in-nginx-fast-cgi-module
 date: 2011-06-01 11:39:17
 ---
 上周服务器更新到nginx的0.8.X之后，nginx出现了core dump的情况，而在0.7.X并不会出现，通过察看core dump文件以及nginx 0.8.x和0.7.x的比较，发现core dump是nginx 0.8.40引入下面这个feature才导致的:

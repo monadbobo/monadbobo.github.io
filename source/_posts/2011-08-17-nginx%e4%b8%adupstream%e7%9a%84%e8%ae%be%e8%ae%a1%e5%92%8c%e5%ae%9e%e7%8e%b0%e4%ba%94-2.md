@@ -13,7 +13,7 @@ tags:
   - nginx
   - server
   - web server
-translate_title: design-and-implementation-of-upstream-in-nginx-(five)
+translate_title: design-and-implementation-of-upstream-in-nginx-(5)
 date: 2011-08-17 13:22:45
 ---
 这次主要来分析upstream中的发送数据给client, 以及当buf不足，将一部分写到temp file的部分，他们对应的函数分别是ngx_event_pipe_write_to_downstream和ngx_event_pipe_write_chain_to_temp_file.

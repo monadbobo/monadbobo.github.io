@@ -8,7 +8,7 @@ permalink: /2012/01/05/nginx%e7%9a%84upstream%e5%88%86%e4%ba%ab/
 categories:
   - nginx
   - server
-translate_title: upstream-share-of-nginx
+translate_title: upstream-sharing-of-nginx
 date: 2012-01-05 07:29:14
 ---
 今天给同事做的分享.

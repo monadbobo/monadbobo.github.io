@@ -13,7 +13,7 @@ tags:
   - c
   - 语言规范
   - 读书笔记
-translate_title: c-reference-manual-reading-notes-(five)
+translate_title: c-reference-manual-reading-notes-(5)
 date: 2012-03-04 10:58:23
 ---
 这次主要是介绍一些c语言中的类型转换。

@@ -12,7 +12,7 @@ tags:
   - tcp
   - tcp/ip
   - 协议
-translate_title: 'brief-introduction-of-rfc-2988-(computing-tcp&#8217;-s-retransmission-timer)'
+translate_title: introduction-to-rfc-2988-(computing-tcp-&-s-retransmission-timer)
 date: 2011-06-11 14:22:35
 ---
 rfc 2988是描述tcp如何计算定时器的一个rfc，是2000年发布的，而最近2988 已经被更新:

@@ -15,7 +15,7 @@ tags:
   - kernel
   - tcp
   - tcp/ip
-translate_title: the-principle-and-implementation-of-early-retransmit-for-tcp
+translate_title: early-retransmit-for-tcp-principle-and-implementation
 date: 2013-05-11 10:10:15
 ---
 Early Retransmit for TCP(ER)是google为了解决快重传的一些局限，从而对快重传(fast retransmit)做出的一些改变，其中ER在linux kernel 3.5进入了内核,他的paper在这里：

@@ -11,7 +11,7 @@ tags:
   - c
   - 语言规范
   - 读书笔记
-translate_title: c-reference-manual-reading-notes-(two)
+translate_title: c-reference-manual-reading-notes-(2)
 date: 2011-07-16 16:07:11
 ---
 这次主要是预处理器和宏处理的部分。

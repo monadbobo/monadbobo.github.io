@@ -3,7 +3,7 @@ title: MySQL · RocksDB · 数据的读取(一)
 author: diaoliang
 tags:
   - rocksdb
-translate_title: mysql.-rocksdb.-data-access-(1)
+translate_title: mysql-rocksdb.-data-reading-(i)
 ---
 
 ## 概述
@@ -245,7 +245,7 @@ LookupKey::LookupKey(const Slice& _user_key, SequenceNumber s) {
   end_ = dst;
 }
 ```
-通过上面的构造函数可以看到在LookupKey中会把全部的internal_key(user_key+seq+type)和RocksDB为user_key所添加的内容指针分别保存起来，也就是memtable_key保存了内部使用的key,而internal_key保存了RocksDB为狗仔内部key添加的内容.这里可以看到查找的时候，保存的type是一个特殊的type,这个type其实是kTypeBlobIndex,也就是是值最大的type.那么为什么要这么做呢，我们在分析之前先来看对应的Seek函数.
+通过上面的构造函数可以看到在LookupKey中会把全部的internal_key(user_key+seq+type)和RocksDB为user_key所添加的内容指针分别保存起来，也就是memtable_key保存了内部使用的key,而internal_key保存了RocksDB为构造内部key添加的内容.这里可以看到查找的时候，保存的type是一个特殊的type,这个type其实是kTypeBlobIndex,也就是是值最大的type.那么为什么要这么做呢，我们在分析之前先来看对应的Seek函数.
 ``` cpp
     // Advance to the first entry with a key >= target
     virtual void Seek(const Slice& user_key, const char* memtable_key)
@@ -263,7 +263,7 @@ inline void InlineSkipList<Comparator>::Iterator::Seek(const char* target) {
 }
 
 ```
-这里由于上面的memtable_key肯定不为null,那么就是会调用下面对应的Seek函数，而这个函数最终会调用skiplist的FindGreaterOrEqual函数，这个函数也就是用来定位到大于或者等于memtable_key的位置,此时我们再会议下一开始介绍的key的排序(InternalKeyComparator::Compare),也就是当Key相同时，按照seq的降序，如果seq相同则按照type的降序，那么此时FindGreaterOrEqual就比较好理解了，也就是会返回小于我们输入seq的值，而当seq相等的话，则会返回小于我们的输入type的值(由于我们传入的是最大的type,因此也就是会直接返回值).那么此时返回的位置有可能key本身就比我们的输入key小，并且我们还需要肯根据不同的type来做不同的操作，那么此时就需要SaveValue回调了.
+这里由于上面的memtable_key肯定不为null,那么就是会调用下面对应的Seek函数，而这个函数最终会调用skiplist的FindGreaterOrEqual函数，这个函数也就是用来定位到大于或者等于memtable_key的位置,此时我们再回忆下一开始介绍的key的排序(InternalKeyComparator::Compare),也就是当Key相同时，按照seq的降序，如果seq相同则按照type的降序，那么此时FindGreaterOrEqual就比较好理解了，也就是会返回小于我们输入seq的值，而当seq相等的话，则会返回小于我们的输入type的值(由于我们传入的是最大的type,因此也就是会直接返回值).那么此时返回的位置有可能key本身就比我们的输入key小，并且我们还需要根据不同的type来做不同的操作，那么此时就需要SaveValue回调了.
 
 接下来我们来看对应的callbakc_func(SaveValue)函数,这个函数有两个参数，第一个参数是之前保存的Saver对象，第二个则就是我们在skiplist中定位到的位置.这个函数要做的比较简单，首先就是判断是否得到的key和我们传递进来的key相同，如果不同，则说明查找的key不合法，因此直接返回.这里我们着重来看对于插入和删除的处理.
 

@@ -11,7 +11,7 @@ categories:
   - server
 tags:
   - nginx
-translate_title: design-and-implementation-of-upstream-in-nginx-(four)
+translate_title: design-and-implementation-of-upstream-in-nginx-(4)
 date: 2011-08-06 17:22:28
 ---
 这此主要是分析发送数据到客户端的部分以及buffering状态下，nginx接收upstream数据的部分，这也是upstream的最复杂的部分，这里我还是忽略了cache部分，以后我会专门写blog来分析nginx的cache部分。

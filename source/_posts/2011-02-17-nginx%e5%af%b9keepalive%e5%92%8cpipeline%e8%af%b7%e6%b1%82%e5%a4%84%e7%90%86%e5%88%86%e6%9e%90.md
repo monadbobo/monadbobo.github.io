@@ -14,7 +14,7 @@ tags:
   - keepalive
   - nginx
   - pipeline
-translate_title: analysis-of-keepalive-and-pipeline-request-processing-by-nginx
+translate_title: nginx's-analysis-of-keeping-alive-and-pipeline-request-processing
 date: 2011-02-17 13:26:34
 ---
 这次主要来看nginx中对keepalive和pipeline的处理，这里概念就不用介绍了。直接来看nginx是如何来做的。

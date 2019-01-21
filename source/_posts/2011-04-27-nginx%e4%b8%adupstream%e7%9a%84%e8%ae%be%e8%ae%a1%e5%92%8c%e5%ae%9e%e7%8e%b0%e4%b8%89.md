@@ -11,7 +11,7 @@ categories:
   - server
 tags:
   - nginx
-translate_title: design-and-implementation-of-upstream-in-nginx-(three)
+translate_title: design-and-implementation-of-upstream-in-nginx-(3)
 date: 2011-04-27 10:47:48
 ---
 这次主要来分析当upstream发送过来数据之后，nginx是如何来处理。不过这里我忽略了cache部分，以后我会专门来分析nginx的cache部分。

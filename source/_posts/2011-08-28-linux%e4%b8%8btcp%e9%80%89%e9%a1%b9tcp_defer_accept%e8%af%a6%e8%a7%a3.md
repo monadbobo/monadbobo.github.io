@@ -15,7 +15,7 @@ tags:
   - kernel
   - tcp
   - tcp/ip
-translate_title: linux-tcp-option-tcp_defer_accept-detailed-explanation
+translate_title: detailed-explanation-of-tcp-option-tcp_defer_accept-under-linux
 date: 2011-08-28 16:04:46
 ---
 TCP_DEFER_ACCEPT这个选项可能大家都知道，不过我这里会从源码和数据包来详细的分析这个选项。要注意，这里我所使用的内核版本是3.0.

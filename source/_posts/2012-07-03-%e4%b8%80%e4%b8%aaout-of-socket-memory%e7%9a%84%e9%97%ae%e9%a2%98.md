@@ -14,7 +14,7 @@ tags:
   - kenel
   - linux
   - tcp/ip
-translate_title: a-problem-of-out-of-socket-memory
+translate_title: an-out-of-socket-memory-problem
 date: 2012-07-03 17:08:08
 ---
 今天同事遇到一个问题，就是server(read hat 5, kernel 2.6.18)的dmesg打出了下面两个信息
