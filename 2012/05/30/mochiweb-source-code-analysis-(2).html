@@ -1,0 +1,175 @@
+<!DOCTYPE html><html lang="[&quot;zh-CN&quot;,&quot;en&quot;,&quot;default&quot;]"><head><meta name="generator" content="Hexo 3.8.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>mochiweb源码分析(二) | pagefault</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.3.1/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">mochiweb源码分析(二)</h1><a id="logo" href="/.">pagefault</a><p class="description">但行好事 莫問前程</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">mochiweb源码分析(二)</h1><div class="post-meta">May 30, 2012<span> | </span><span class="category"><a href="/categories/erlang/">erlang</a><a href="/categories/erlang/源码阅读/">源码阅读</a></span></div><div class="post-content"><p>这次主要来看mochiweb如何处理http协议以及如何将外部模块加载到mochiweb框架中。</p>
+<p>首先在上一篇的分析最后，我们知道当accept句柄之后，mochiweb最终会调用call_loop方法，那么我们就从call_loop开始</p>
+<p>[erlang]</p>
+<p>call_loop({M, F}, Socket) -&gt;</p>
+<p>M:F(Socket);</p>
+<p>call_loop({M, F, [A1]}, Socket) -&gt;</p>
+<p>M:F(Socket, A1);</p>
+<p>call_loop({M, F, A}, Socket) -&gt;</p>
+<p>erlang:apply(M, F, [Socket | A]);</p>
+<p>call_loop(Loop, Socket) -&gt;</p>
+<p>Loop(Socket).</p>
+<p>[/erlang]</p>
+<a id="more"></a>
+<p>可以看到call_loop一共有重载了4次，其中4个函数不同点只是第一个参数，这里有这么多重载是因为mochiweb并不是简单的只是一个http server，它还可以直接作为一个裸socket server(这个后续再说).而这里mochiweb调用call_loop时，第一个参数就是Loop，而这个Loop是什么呢，我们来从mochiweb启动开始来分析。先来回顾一开始解析option的部分。</p>
+<p>[erlang]</p>
+<p>parse_options(Options) -&gt;</p>
+<p>{loop, HttpLoop} = proplists:lookup(loop, Options),</p>
+<p>Loop = {?MODULE, loop, [HttpLoop]},</p>
+<p>Options1 = [{loop, Loop} | proplists:delete(loop, Options)],</p>
+<p>mochilists:set_defaults(?DEFAULTS, Options1).</p>
+<p>[/erlang]</p>
+<p>可以看到这里最终options1 里面loop会是这样子</p>
+<p>[erlang]</p>
+<p>{loop, {?MODULE, loop, [HttpLoop]}}</p>
+<p>[/erlang]</p>
+<p>而在mochiweb_socket_server中，会重新解析loop</p>
+<p>[erlang]</p>
+<p>parse_options([{loop, Loop} | Rest], State) -&gt;</p>
+<p>parse_options(Rest, State#mochiweb_socket_server{loop=Loop});</p>
+<p>[/erlang]</p>
+<p>此时record中的loop将会是</p>
+<p>[erlang]</p>
+<p>{mochiweb_http, loop, [HttpLoop]},</p>
+<p>[/erlang]</p>
+<p>而这个也就是会最终传递给call_loop。于是经过匹配，最终call_loop会调用mochiweb_http的loop方法，而第一个参数是对应的socket，第二个是[HttpLoop]也就是自定义模块所传递进来的loop。</p>
+<p>于是我们来看mochiweb_http的loop方法.</p>
+<p>[erlang]</p>
+<p>loop(Socket, Body) -&gt;</p>
+<p>ok = mochiweb_socket:setopts(Socket, [{packet, http}]),</p>
+<p>request(Socket, Body).</p>
+<p>request(Socket, Body) -&gt;</p>
+<p>ok = mochiweb_socket:setopts(Socket, [{active, once}]),</p>
+<p>receive</p>
+<p>{Protocol, _, {http_request, Method, Path, Version}} when Protocol == http orelse Protocol == ssl -&gt;</p>
+<p>ok = mochiweb_socket:setopts(Socket, [{packet, http}]),</p>
+<p>headers(Socket, {Method, Path, Version}, [], Body, 0);</p>
+<p>{Protocol, _, {http_error, “\r\n”}} when Protocol == http orelse Protocol == ssl -&gt;</p>
+<p>request(Socket, Body);</p>
+<p>{Protocol, _, {http_error, “\n”}} when Protocol == http orelse Protocol == ssl -&gt;</p>
+<p>request(Socket, Body);</p>
+<p>{tcp_closed, _} -&gt;</p>
+<p>mochiweb_socket:close(Socket),</p>
+<p>exit(normal);</p>
+<p>{ssl_closed, _} -&gt;</p>
+<p>mochiweb_socket:close(Socket),</p>
+<p>exit(normal);</p>
+<p>_Other -&gt;</p>
+<p>handle_invalid_request(Socket)</p>
+<p>after ?REQUEST_RECV_TIMEOUT -&gt;</p>
+<p>mochiweb_socket:close(Socket),</p>
+<p>exit(normal)</p>
+<p>end.</p>
+<p>[/erlang]</p>
+<p>首先设置socket属性，由于我们这里是http协议，因此就使用{packet,http},然后调用request方法来处理请求。这里注意在读取之前，设置socket属性为{active, once},也就是半阻塞模式。接收完毕后，会继续调用headers来接收并解析http header.</p>
+<p>[erlang]</p>
+<p>headers(Socket, Request, Headers, _Body, ?MAX_HEADERS) -&gt;</p>
+<p>%% Too many headers sent, bad request.</p>
+<p>ok = mochiweb_socket:setopts(Socket, [{packet, raw}]),</p>
+<p>handle_invalid_request(Socket, Request, Headers);</p>
+<p>headers(Socket, Request, Headers, Body, HeaderCount) -&gt;</p>
+<p>ok = mochiweb_socket:setopts(Socket, [{active, once}]),</p>
+<p>receive</p>
+<p>{Protocol, _, http_eoh} when Protocol == http orelse Protocol == ssl -&gt;</p>
+<p>Req = new_request(Socket, Request, Headers),</p>
+<p>call_body(Body, Req),</p>
+<p>?MODULE:after_response(Body, Req);</p>
+<p>{Protocol, _, {http_header, _, Name, _, Value}} when Protocol == http orelse Protocol == ssl -&gt;</p>
+<p>headers(Socket, Request, [{Name, Value} | Headers], Body,</p>
+<p>1 + HeaderCount);</p>
+<p>{tcp_closed, _} -&gt;</p>
+<p>mochiweb_socket:close(Socket),</p>
+<p>exit(normal);</p>
+<p>_Other -&gt;</p>
+<p>handle_invalid_request(Socket, Request, Headers)</p>
+<p>after ?HEADERS_RECV_TIMEOUT -&gt;</p>
+<p>mochiweb_socket:close(Socket),</p>
+<p>exit(normal)</p>
+<p>end.</p>
+<p>[/erlang]</p>
+<p>可以看到如果header超过了规定大小的话，就会报错，如果是正常的头的话，会一直递归解析，直到协议解析完毕(http_eoh),然后调用new_request来创建一个request对象，并调用call_body，最后调用after_response.</p>
+<p>接下来就来看这三个函数，首先是new_request</p>
+<p>[erlang]</p>
+<p>new_request(Socket, Request, RevHeaders) -&gt;</p>
+<p>ok = mochiweb_socket:setopts(Socket, [{packet, raw}]),</p>
+<p>mochiweb:new_request({Socket, Request, lists:reverse(RevHeaders)}).</p>
+<p>[/erlang]</p>
+<p>可以看到由于接下来是可能会接收http body，因此这里就设置位packet raw，然后调用mochiweb的new_request创建一个新的request对象。这里new_request重载了很多次，我们就只看简单的分析一个</p>
+<p>[erlang]</p>
+<p>new_request({Socket, {Method, {abs_path, Uri}, Version}, Headers}) -&gt;</p>
+<p>mochiweb_request:new(Socket,</p>
+<p>Method,</p>
+<p>Uri,</p>
+<p>Version,</p>
+<p>mochiweb_headers:make(Headers));</p>
+<p>[/erlang]</p>
+<p>它会直接调用 mochiweb_request的new，这里就有一个很需要注意的地方了，那就是 mochiweb_request使用了Parameterized Modules，这个东西暂时erlang官方的文档还没更新，不过详细可以看峰爷的blog:<a href="http://mryufeng.iteye.com/blog/477376" target="_blank" rel="noopener">http://mryufeng.iteye.com/blog/477376</a> 以及这篇文章： <a href="http://www.trapexit.org/Parameterized_Modules" target="_blank" rel="noopener">http://www.trapexit.org/Parameterized_Modules</a> </p>
+<p>我们来看mochiweb_request的模块声明</p>
+<p>[erlang]</p>
+<p>-module(mochiweb_request, [Socket, Method, RawPath, Version, Headers]).</p>
+<p>[/erlang]</p>
+<p>这样子，当new了之后，我们就能通过它export出来的几个方法来取得对应的值，就有点像java了。</p>
+<p>然后来看call_body方法</p>
+<p>[erlang]</p>
+<p>call_body({M, F, A}, Req) -&gt;</p>
+<p>erlang:apply(M, F, [Req | A]);</p>
+<p>call_body({M, F}, Req) -&gt;</p>
+<p>M:F(Req);</p>
+<p>call_body(Body, Req) -&gt;</p>
+<p>Body(Req).</p>
+<p>[/erlang]</p>
+<p>在headers调用call_body时，传递进的第一个参数，其实就是外部模块传递进来的loop这个tuple。因此我们来看keepalive传递进来的loop到底是什么。</p>
+<p>[erlang]</p>
+<p>-define(LOOP, {?MODULE, loop}).</p>
+<p>start(Options = [{port, _Port}]) -&gt;</p>
+<p>mochiweb_http:start([{name, ?MODULE}, {loop, ?LOOP} | Options]).</p>
+<p>[/erlang]</p>
+<p>可以看到就是一个简单的tuple，{?MODULE, loop},所以此时call_body将会调用第二个函数，直接调用回调模块的loop方法。</p>
+<p>而call_body的第一个函数则是带参数版的而已。</p>
+<p>然后我们来看after_response方法，这个方法主要是用来判断是否是keepalive连接，然后是否需要关闭当前连接，如果不需要关闭，则再次进入循环。</p>
+<p>[erlang]</p>
+<p>after_response(Body, Req) -&gt;</p>
+<p>Socket = Req:get(socket),</p>
+<p>case Req:should_close() of</p>
+<p>true -&gt;</p>
+<p>mochiweb_socket:close(Socket),</p>
+<p>exit(normal);</p>
+<p>false -&gt;</p>
+<p>Req:cleanup(),</p>
+<p>erlang:garbage_collect(),</p>
+<p>?MODULE:loop(Socket, Body)</p>
+<p>end.</p>
+<p>[/erlang]</p>
+<p>这里其他的都很简单，我们主要来看should_close方法。</p>
+<p>[erlang]</p>
+<p>should_close() -&gt;</p>
+<p>ForceClose = erlang:get(?SAVE_FORCE_CLOSE) =/= undefined,</p>
+<p>DidNotRecv = erlang:get(?SAVE_RECV) =:= undefined,</p>
+<p>ForceClose orelse Version &lt; {1, 0}</p>
+<p>%% Connection: close</p>
+<p>orelse get_header_value(“connection”) =:= “close”</p>
+<p>%% HTTP 1.0 requires Connection: Keep-Alive</p>
+<p>orelse (Version =:= {1, 0}</p>
+<p>andalso get_header_value(“connection”) =/= “Keep-Alive”)</p>
+<p>%% unread data left on the socket, can&#8217;t safely continue</p>
+<p>orelse (DidNotRecv</p>
+<p>andalso get_header_value(“content-length”) =/= undefined</p>
+<p>andalso list_to_integer(get_header_value(“content-length”)) &gt; 0)</p>
+<p>orelse (DidNotRecv</p>
+<p>andalso get_header_value(“transfer-encoding”) =:= “chunked”).</p>
+<p>[/erlang]</p>
+<p>这个方法主要是判断是否需要关闭连接，不过这里要注意使用了进程字典，也就是我们在外部模块可以设置是否要强制关闭。</p>
+<p>我们最后就来看下mochiweb中进程字典所保存的元素。</p>
+<p>[erlang]</p>
+<p>-define(SAVE_QS, mochiweb_request_qs).</p>
+<p>-define(SAVE_PATH, mochiweb_request_path).</p>
+<p>-define(SAVE_RECV, mochiweb_request_recv).</p>
+<p>-define(SAVE_BODY, mochiweb_request_body).</p>
+<p>-define(SAVE_BODY_LENGTH, mochiweb_request_body_length).</p>
+<p>-define(SAVE_POST, mochiweb_request_post).</p>
+<p>-define(SAVE_COOKIE, mochiweb_request_cookie).</p>
+<p>-define(SAVE_FORCE_CLOSE, mochiweb_request_force_close).</p>
+<p>[/erlang]</p>
+<p>而进程字典的优缺点可以看峰爷的这篇blog: <a href="http://mryufeng.iteye.com/blog/435642" target="_blank" rel="noopener">http://mryufeng.iteye.com/blog/435642</a></p>
+<p>可以看到mochiweb把一些使用很频繁的都放在了进程字典中，比如url中的参数(SAVE_QS),比如cookie(SAVE_COOKIE)，比如body(SAVE_BODY)等。</p>
+</div><div class="tags"><a href="/tags/server/">server</a><a href="/tags/web-server/">web server</a><a href="/tags/erlang/">erlang</a></div><div class="post-nav"><a class="pre" href="/2012/06/30/brief-analysis-of-intel-ten-gigabit-network-card-driver.html">intel万兆网卡驱动简要分析</a><a class="next" href="/2012/05/19/mochiweb-source-code-analysis-(1).html">mochiweb源码分析(一)</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form class="search-form" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank"><input type="text" name="q" maxlength="20" placeholder="Search"><input type="hidden" name="sitesearch" value="http://yoursite.com"></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/SPDY/">SPDY</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/SPDY/协议/">协议</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/erlang/">erlang</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/erlang/源码阅读/">源码阅读</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/kernel/">kernel</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/kernel/mac/">mac</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/kernel/server/">server</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/kernel/协议/">协议</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/kernel/源码阅读/">源码阅读</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/lua/">lua</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/lua/源码阅读/">源码阅读</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/nginx/">nginx</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/nginx/server/">server</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/nginx/server/源码阅读/">源码阅读</a></li></ul></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/协议/">协议</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/生活/">生活</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/语言规范/">语言规范</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/rocksdb/" style="font-size: 15px;">rocksdb</a> <a href="/tags/lua/" style="font-size: 15px;">lua</a> <a href="/tags/kernel/" style="font-size: 15px;">kernel</a> <a href="/tags/tcp-ip/" style="font-size: 15px;">tcp/ip</a> <a href="/tags/mac/" style="font-size: 15px;">mac</a> <a href="/tags/nginx/" style="font-size: 15px;">nginx</a> <a href="/tags/server/" style="font-size: 15px;">server</a> <a href="/tags/linux/" style="font-size: 15px;">linux</a> <a href="/tags/process/" style="font-size: 15px;">process</a> <a href="/tags/qemu/" style="font-size: 15px;">qemu</a> <a href="/tags/aio/" style="font-size: 15px;">aio</a> <a href="/tags/google/" style="font-size: 15px;">google</a> <a href="/tags/协议/" style="font-size: 15px;">协议</a> <a href="/tags/路由/" style="font-size: 15px;">路由</a> <a href="/tags/tcp/" style="font-size: 15px;">tcp</a> <a href="/tags/TFO/" style="font-size: 15px;">TFO</a> <a href="/tags/rfc/" style="font-size: 15px;">rfc</a> <a href="/tags/c/" style="font-size: 15px;">c</a> <a href="/tags/语言规范/" style="font-size: 15px;">语言规范</a> <a href="/tags/读书笔记/" style="font-size: 15px;">读书笔记</a> <a href="/tags/http/" style="font-size: 15px;">http</a> <a href="/tags/spdy/" style="font-size: 15px;">spdy</a> <a href="/tags/kenel/" style="font-size: 15px;">kenel</a> <a href="/tags/opensource/" style="font-size: 15px;">opensource</a> <a href="/tags/InnoDB/" style="font-size: 15px;">InnoDB</a> <a href="/tags/sever/" style="font-size: 15px;">sever</a> <a href="/tags/rfs/" style="font-size: 15px;">rfs</a> <a href="/tags/fs/" style="font-size: 15px;">fs</a> <a href="/tags/cache/" style="font-size: 15px;">cache</a> <a href="/tags/server，mm/" style="font-size: 15px;">server，mm</a> <a href="/tags/web-server/" style="font-size: 15px;">web server</a> <a href="/tags/tcp-cork/" style="font-size: 15px;">tcp_cork</a> <a href="/tags/服务器设计/" style="font-size: 15px;">服务器设计</a> <a href="/tags/congest/" style="font-size: 15px;">congest</a> <a href="/tags/keepalive/" style="font-size: 15px;">keepalive</a> <a href="/tags/pipeline/" style="font-size: 15px;">pipeline</a> <a href="/tags/epoll/" style="font-size: 15px;">epoll</a> <a href="/tags/erlang/" style="font-size: 15px;">erlang</a> <a href="/tags/mochiweb/" style="font-size: 15px;">mochiweb</a> <a href="/tags/network/" style="font-size: 15px;">network</a> <a href="/tags/loadbalance/" style="font-size: 15px;">loadbalance</a> <a href="/tags/glibc/" style="font-size: 15px;">glibc</a> <a href="/tags/systemcall/" style="font-size: 15px;">systemcall</a> <a href="/tags/心情/" style="font-size: 15px;">心情</a> <a href="/tags/gro/" style="font-size: 15px;">gro</a> <a href="/tags/gc/" style="font-size: 15px;">gc</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/17/design-and-implementation-of-linkbuf-in-innodb.html">InnoDB中LinkBuf设计与实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/02/17/innodb-tablespace-source-code-analysis.html">InnoDB tablespace源码分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/12/19/mysql-rocksdb.-data-reading-(ii).html">MySQL · RocksDB · 数据的读取(二)</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/11/13/mysql-rocksdb.-data-reading-(i).html">MySQL · RocksDB · 数据的读取(一)</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/27/mysql-rocksdb-level-compact-analysis.html">MySQL · RocksDB · Level Compact 分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/07/mysql-rocksdb-memtable-flush-analysis.html">MySQL · RocksDB · Memtable flush分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/08/writing-of-mysql.-rocksdb.-memtable.html">MySQL · RocksDB ·  MemTable的写入</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/04/implementation-of-mysql-rocksdb-writing-logic.html">MySQL · RocksDB ·  写入逻辑的实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/06/introduction-to-mysql-rocksdb-column-family.html">MySQL · RocksDB · Column Family介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/08/introduction-to-mysql.-rocksdb.-manifest-file.html">MySQL · RocksDB · MANIFEST文件介绍</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="http://www.example1.com/" title="site-name1" target="_blank">site-name1</a><ul></ul><a href="http://www.example2.com/" title="site-name2" target="_blank">site-name2</a><ul></ul><a href="http://www.example3.com/" title="site-name3" target="_blank">site-name3</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">pagefault.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.2/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.2/jquery.fancybox.min.css"><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
