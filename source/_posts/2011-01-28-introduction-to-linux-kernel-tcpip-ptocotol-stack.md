@@ -10,7 +10,7 @@ categories:
 tags:
   - kernel
   - linux
-translate_title: introduction-to-linux-kernel-tcp/ip-procotol-stack
+translate_title: introduction-to-linux-kernel-tcpip-procotol-stack
 date: 2011-01-28 03:35:43
 ---
 今天给公司同事做的分享.

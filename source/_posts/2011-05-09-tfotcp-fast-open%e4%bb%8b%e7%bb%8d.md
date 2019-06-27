@@ -11,7 +11,7 @@ tags:
   - tcp
   - TFO
   - 协议
-translate_title: introduction-to-tfo-(tcp-fast-open)
+translate_title: introduction-to-tfo-tcp-fast-open
 date: 2011-05-09 12:41:42
 ---
 这个是google的几个人提交的一个rfc，是对tcp的一个增强，简而言之就是在3次握手的时候也用来交换数据。这个东西google内部已经在使用了，不过内核的相关patch还没有开源出来，chrome也支持这个了(client的内核必须支持). 要注意，TFO默认是关闭的，因为它有一些特定的适用场景，下面我会介绍到。

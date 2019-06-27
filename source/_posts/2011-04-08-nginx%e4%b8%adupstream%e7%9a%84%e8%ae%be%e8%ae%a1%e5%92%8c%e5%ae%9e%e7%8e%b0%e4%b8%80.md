@@ -14,7 +14,7 @@ categories:
   - 源码阅读
 tags:
   - nginx
-translate_title: design-and-implementation-of-upstream-in-nginx-(1)
+translate_title: design-and-implementation-of-upstream-in-nginx-1
 date: 2011-04-08 19:27:37
 ---
 在nginx的模块中，分为3种类型，分别是handler，filter和upstream，其中upstream可以看做一种特殊的handler，它主要用来实现和后端另外的服务器(php/jboss等)进行通信，由于在nginx中全部都是使用非阻塞，并且是一个流式的处理，所以upstream的实现很复杂，接下来我会通过几篇blog来详细的分析下nginx中upstream的设计和实现。

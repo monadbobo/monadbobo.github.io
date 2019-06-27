@@ -1,7 +1,7 @@
 ---
 title: MySQL · RocksDB · WAL(WriteAheadLog)介绍
 author: diaoliang
-translate_title: introduction-to-mysql-rocksdb-wal-(writeaheadlog)
+translate_title: mysql-·-rocksdb-wal-writeaheadlog-introduction
 tags:
   - rocksdb
 ---

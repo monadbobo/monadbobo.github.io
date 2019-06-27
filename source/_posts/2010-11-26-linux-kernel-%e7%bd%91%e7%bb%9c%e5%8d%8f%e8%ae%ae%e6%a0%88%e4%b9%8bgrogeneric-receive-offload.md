@@ -12,7 +12,7 @@ tags:
   - gro
   - kernel
   - tcp/ip
-translate_title: gro-(generic-receive-of-fload)-of-linux-kernel-network-protocol-stack
+translate_title: gro-generic-receive-offload-of-the-linux-kernel-network-protocol-stack
 date: 2010-11-26 13:00:59
 ---
 GRO(Generic receive offload)在内核2.6.29之后合并进去的，作者是一个华裔Herbert Xu ,GRO的简介可以看这里：

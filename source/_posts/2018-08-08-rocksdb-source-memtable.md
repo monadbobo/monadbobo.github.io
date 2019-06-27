@@ -1,7 +1,7 @@
 ---
 title: MySQL · RocksDB ·  MemTable的写入
 author: diaoliang
-translate_title: writing-of-mysql.-rocksdb.-memtable
+translate_title: mysql-·-rocksdb-memtable-write
 tags:
   - rocksdb
 ---

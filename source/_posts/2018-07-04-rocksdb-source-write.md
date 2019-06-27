@@ -1,7 +1,7 @@
 ---
 title: MySQL · RocksDB ·  写入逻辑的实现
 author: diaoliang
-translate_title: implementation-of-mysql-rocksdb-writing-logic
+translate_title: mysql-·-rocksdb-implementation-of-write-logic
 tags:
   - rocksdb
 ---

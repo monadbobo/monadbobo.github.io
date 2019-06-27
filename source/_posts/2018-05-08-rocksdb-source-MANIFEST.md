@@ -1,7 +1,7 @@
 ---
 title: MySQL · RocksDB · MANIFEST文件介绍
 author: diaoliang
-translate_title: introduction-to-mysql.-rocksdb.-manifest-file
+translate_title: mysql-·-rocksdb-manifest-file-introduction
 tags:
   - rocksdb
 ---

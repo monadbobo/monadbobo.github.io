@@ -13,7 +13,7 @@ tags:
   - tcp
   - tcp_cork
   - 服务器设计
-translate_title: application-of-nginx-to-tcp_cork/tcp_nopush
+translate_title: nginx-use-of-tcpcorktcpnopush
 date: 2011-02-23 11:18:15
 ---
 在nginx中使用了send_file 并且配合TCP_CORK/TCP_NOPUSH进行操作，我们一般的操作是这样子的，首先调用tcp_cork，阻塞下层的数据发送，然后调用send_file发送数据，最后关闭TCP_CORK/TCP_NOPUSH.而在nginx中不是这样处理的，前面两步都是一样的，最后一步，它巧妙的利用的http的特性，那就是基本都是短连接，也就是处理完当前的request之后，就会关闭当前的连接句柄，而在linux中，如果不是下面两种情况之一，那么关闭tcp句柄，就会发送完发送buf中的数据，才进行tcp的断开操作(具体可以看我以前写的那篇 “linux内核中tcp连接的断开处理”的 blog) :

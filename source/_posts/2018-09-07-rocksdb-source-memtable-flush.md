@@ -3,7 +3,7 @@ title: MySQL · RocksDB · Memtable flush分析
 author: diaoliang
 tags:
   - rocksdb
-translate_title: mysql-rocksdb-memtable-flush-analysis
+translate_title: mysql-·-rocksdb-memtable-flush-analysis
 ---
 
 ## 概述

@@ -3,7 +3,7 @@ title: MySQL · RocksDB · 数据的读取(二)
 author: diaoliang
 tags:
   - rocksdb
-translate_title: mysql-rocksdb.-data-reading-(ii)
+translate_title: mysql-·-rocksdb-data-reading-2
 ---
 
 # 概述

@@ -1,7 +1,7 @@
 ---
 title: MySQL · RocksDB · Column Family介绍
 author: diaoliang
-translate_title: introduction-to-mysql-rocksdb-column-family
+translate_title: mysql-·-rocksdb-introduction-to-column-family
 tags:
   - rocksdb
 ---

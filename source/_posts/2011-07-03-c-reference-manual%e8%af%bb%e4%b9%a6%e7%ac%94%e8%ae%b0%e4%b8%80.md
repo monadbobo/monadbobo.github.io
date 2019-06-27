@@ -11,7 +11,7 @@ tags:
   - c
   - 语言规范
   - 读书笔记
-translate_title: c-reference-manual-reading-notes-(1)
+translate_title: c-reference-manual-reading-notes-1
 date: 2011-07-03 09:46:54
 ---
 我读的是第五版的影印版，简单的做了一些笔记.下面是第二章的笔记.

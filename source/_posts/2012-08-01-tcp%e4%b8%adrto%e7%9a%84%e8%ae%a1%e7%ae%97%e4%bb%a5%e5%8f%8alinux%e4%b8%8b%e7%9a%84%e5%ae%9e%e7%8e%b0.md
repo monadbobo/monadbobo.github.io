@@ -15,7 +15,7 @@ tags:
   - kernel
   - tcp
   - tcp/ip
-translate_title: calculation-of-rto-in-tcp-and-implementation-under-linux
+translate_title: rto-calculation-in-tcp-and-implementation-under-linux
 date: 2012-08-01 03:35:18
 ---
 计算RTT以及RTO的代码比较简单，我们先来看原理，首先相关的rfc有两篇分别是rfc793以及rfc6298，而相关的paper有一篇，那就是Van Jacobson和Michael J. Karels的 Congestion Avoidance and Control这篇paper，这篇1988年的paper中描述的RTT计算方法，就是我们当前所使用的计算方法，可能有的操作系统有一点修改，不过基本的东西都一样。

@@ -1,9 +1,9 @@
 ---
-title: MySQL · INNODB · Tablespace分析
-author: diaoliang
+title: InnoDB tablespace源码分析
+author: Simon Liu
 tags:
   - InnoDB
-translate_title: mysql.-innodb.-tablespace-analysis
+translate_title: innodb-tablespace-source-code-analysis
 ---
 
 ## 简介
@@ -582,3 +582,4 @@ void Tablespace_pool::free_ts(Tablespace *ts) {
 }
 
 ```
+#MySQL/InnoDB/tablespace

@@ -3,7 +3,7 @@ title: MySQL · RocksDB · Level Compact 分析
 author: diaoliang
 tags:
   - rocksdb
-translate_title: mysql-rocksdb-level-compact-analysis
+translate_title: mysql-·-rocksdb-level-compact-analysis
 ---
 
 ## 综述

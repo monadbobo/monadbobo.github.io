@@ -15,7 +15,7 @@ tags:
   - nginx
   - opensource
   - web server
-translate_title: design-and-implementation-of-cache-in-nginx-(1)
+translate_title: design-and-implementation-of-cache-in-nginx-1
 date: 2012-03-21 05:22:41
 ---
 Nginx的cache实现比较简单，没有使用内存，全部都是使用文件来对后端的response进行cache，因此nginx相比varnish以及squid之类的专门做cache的server，可能效果不会那么好。特别如果cache内容比较大的话。不过还有一种折衷的处理，那就是挂载一个内存盘，然后让nginx cache到这个盘。

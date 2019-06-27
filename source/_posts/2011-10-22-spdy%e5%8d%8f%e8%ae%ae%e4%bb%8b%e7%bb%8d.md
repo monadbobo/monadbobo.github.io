@@ -12,7 +12,7 @@ tags:
   - http
   - spdy
   - 协议
-translate_title: introduction-to-spdy-protocol
+translate_title: introduction-to-spdy-agreement
 date: 2011-10-22 18:48:11
 ---
 SPDY的主页： http://www.chromium.org/spdy

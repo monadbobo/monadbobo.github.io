@@ -12,7 +12,7 @@ tags:
   - google
   - kernel
   - tcp/ip
-translate_title: xps-characteristics-of-linux-kernel-network-protocol-stack
+translate_title: linux-kernel-network-protocol-stack-xps-features-detailed
 date: 2010-12-12 18:04:32
 ---
 [xps](http://lwn.net/Articles/416646/)全称是Transmit Packet Steering，是rfs/rps的作者Tom Herbert提交的又一个patch，预计会在2.6.37进入内核。

@@ -11,7 +11,7 @@ tags:
   - c
   - 语言规范
   - 读书笔记
-translate_title: c-reference-manual-reading-notes-(4)
+translate_title: c-reference-manual-reading-notes-four
 date: 2011-09-18 14:21:01
 ---
 主要是介绍c语言中的类型

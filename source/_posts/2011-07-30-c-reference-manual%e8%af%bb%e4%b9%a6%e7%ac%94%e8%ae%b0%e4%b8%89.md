@@ -11,7 +11,7 @@ tags:
   - c
   - 语言规范
   - 读书笔记
-translate_title: c-reference-manual-reading-notes-(3)
+translate_title: c-reference-manual-reading-notes-three
 date: 2011-07-30 15:12:44
 ---
 这次主要是针对c语言中的声明(declaration)定义.

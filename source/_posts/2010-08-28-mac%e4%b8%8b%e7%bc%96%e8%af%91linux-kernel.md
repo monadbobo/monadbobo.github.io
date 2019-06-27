@@ -15,7 +15,7 @@ categories:
 tags:
   - kernel
   - mac
-translate_title: compiling-linux-kernel-under-mac
+translate_title: compile-linux-kernel-under-mac
 date: 2010-08-28 09:13:06
 ---
 这里我的gcc是4.5.1 binutils 是2.20.1 ，内核是2.6.35.3.

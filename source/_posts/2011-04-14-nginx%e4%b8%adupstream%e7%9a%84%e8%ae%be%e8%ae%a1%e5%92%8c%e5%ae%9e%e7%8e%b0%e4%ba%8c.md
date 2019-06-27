@@ -14,7 +14,7 @@ tags:
   - opensource
   - server
   - web server
-translate_title: design-and-implementation-of-upstream-in-nginx-(2)
+translate_title: design-and-implementation-of-upstream-in-nginx-2
 date: 2011-04-14 08:50:36
 ---
 这次主要来看upstream的几个相关的hook函数。

@@ -15,7 +15,7 @@ categories:
 tags:
   - nginx
   - server
-translate_title: processing-http-header-in-nginx-(2)
+translate_title: detailed-processing-of-http-header-in-nginx-2
 date: 2010-09-26 14:04:08
 ---
 然后是charset filter，这个主要是处理nginx内部的charset命令，转换为设置的编码。这个filter就不介绍了，主要是一个解码的过程。
